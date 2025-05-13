@@ -89,4 +89,4 @@ def webhook_rastreio():
 @app.route('/', methods=['GET'])
 def index():
     return "DogNerd webhook está online 🐶📦", 200
-8deb3c0 (bot whatsapp flask para webhook do Bling)
+
