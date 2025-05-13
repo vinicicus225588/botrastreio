@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 Flask
 twilio
 gunicorn
+=======
+Flask
+twilio
+gunicorn
+>>>>>>> 8deb3c0 (bot whatsapp flask para webhook do Bling)
