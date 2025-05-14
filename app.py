@@ -18,8 +18,8 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 def index():
     return "DogNerd webhook está online 🐶📦", 200
 
-# Rota de validação do webhook do Melhor Envio
-@app.route("/webhook/melhorenvio", methods=["GET"])
+# Rota de validação e recebimento do webhook do Melhor Envio
+@app.route("/webhook/melhorenvio", methods=["GET", "POST"])
 def validar_webhook_melhorenvio():
     return jsonify({"status": "Webhook do Melhor Envio ativo"}), 200
 
