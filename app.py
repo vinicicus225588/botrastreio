@@ -57,7 +57,7 @@ def webhook_melhorenvio():
 
             # Enviar mensagem via WhatsApp
             client.messages.create(
-                to=f"whatsapp:{telefone}",
+                to=telefone if telefone.startswith("whatsapp:") else f"whatsapp:{telefone}",
                 from_=TWILIO_WHATSAPP_FROM,
                 content_sid=TWILIO_TEMPLATE_SID,
                 content_variables=json.dumps({
