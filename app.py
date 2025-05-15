@@ -8,7 +8,7 @@ app = Flask(__name__)
 # Credenciais da Twilio via variáveis de ambiente
 TWILIO_ACCOUNT_SID = os.environ['TWILIO_ACCOUNT_SID']
 TWILIO_AUTH_TOKEN = os.environ['TWILIO_AUTH_TOKEN']
-TWILIO_WHATSAPP_FROM = os.environ['TWILIO_WHATSAPP_FROM']
+TWILIO_WHATSAPP_FROM = f"whatsapp:{os.environ['TWILIO_WHATSAPP_FROM'].replace('whatsapp:', '')}"
 TWILIO_TEMPLATE_SID = os.environ['TWILIO_TEMPLATE_SID']
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -39,25 +39,32 @@ def webhook_melhorenvio():
             if not all([codigo, status, nome, telefone]):
                 return jsonify({"error": "Dados incompletos"}), 400
 
+            # Ajustar número para o formato correto com prefixo
+            if not telefone.startswith("whatsapp:"):
+                telefone = f"whatsapp:{telefone}"
+
+            # Verificar se ambos são do mesmo canal (obrigatório pela Twilio)
+            if not TWILIO_WHATSAPP_FROM.startswith("whatsapp:") or not telefone.startswith("whatsapp:"):
+                return jsonify({"error": "From e To devem ser do mesmo canal (WhatsApp)"}), 400
+
             # Definir mensagem com base no status
             link = f"https://www.melhorrastreio.com.br/rastreio/{codigo}"
             mensagem = ""
 
             if status == "posted":
-                mensagem = f"Oi {nome}, Aqui é o Dog Nerdson teclando, 🐶 tudo bem? Só te chamei para dizer que o seu pedido foi postado e tá com cheirinho de novidade! Aqui está o link para você rastrear direitinho: {link}, qualquer coisa chame a gente! "
+                mensagem = f"Oi {nome}, Aqui é o Dog Nerdson teclando, 🐶 tudo bem? Só te chamei para dizer que o seu pedido foi postado e tá com cheirinho de novidade! Aqui está o link para você rastrear direitinho: {link}, qualquer coisa chame a gente!"
             elif status == "out_for_delivery":
                 mensagem = f"{nome}! Seu pedido acabou de sair para entrega! 🕺 Fique de orelha em pé e interfone ligado que motô tá chegando! 🚚💨 Rastreie: {link}"
             elif status == "delivered":
                 mensagem = f"{nome}, missão cumprida! 😉📦 Seu pedido foi entregue com sucesso. Esperamos que amem tanto quanto a gente amou preparar. 😊 Veja aqui: {link}"
             elif status == "in_transit":
-                # Aqui, como não temos a cidade no payload, você pode adicionar lógica extra se quiser
                 mensagem = f"{nome}, seu pedido DogNerd está quase aí! 🐶 Falta pouco pra ele aparecer latindo na sua porta 🤩. Link: {link}"
             else:
-                return jsonify({"status": "Evento ignorado"}), 200  # Não envia para outros eventos
+                return jsonify({"status": "Evento ignorado"}), 200
 
-            # Enviar mensagem via WhatsApp
+            # Enviar mensagem via WhatsApp com template
             client.messages.create(
-                to=telefone if telefone.startswith("whatsapp:") else f"whatsapp:{telefone}",
+                to=telefone,
                 from_=TWILIO_WHATSAPP_FROM,
                 content_sid=TWILIO_TEMPLATE_SID,
                 content_variables=json.dumps({
