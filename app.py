@@ -2,6 +2,29 @@ import os
 import json
 from flask import Flask, request, jsonify
 from twilio.rest import Client
+from datetime import datetime
+
+ENTREGAS_PATH = "db/entregas.json"
+
+def salvar_entrega(numero_cliente, nome_cliente):
+    nova_entrega = {
+        "numero": numero_cliente,
+        "nome": nome_cliente,
+        "data_entrega": datetime.now().isoformat(),
+        "mensagem_enviada": False
+    }
+
+    # Cria o arquivo se não existir
+    if not os.path.exists(ENTREGAS_PATH):
+        with open(ENTREGAS_PATH, 'w') as f:
+            json.dump([], f)
+
+    # Lê, adiciona e salva a nova entrega
+    with open(ENTREGAS_PATH, 'r+') as f:
+        entregas = json.load(f)
+        entregas.append(nova_entrega)
+        f.seek(0)
+        json.dump(entregas, f, indent=4)
 
 app = Flask(__name__)
 
@@ -57,6 +80,8 @@ def webhook_melhorenvio():
                 mensagem = f"{nome}! Seu pedido acabou de sair para entrega! 🕺 Fique de orelha em pé e interfone ligado que motô tá chegando! 🚚💨 Rastreie: {link}"
             elif status == "delivered":
                 mensagem = f"{nome}, missão cumprida! 😉📦 Seu pedido foi entregue com sucesso. Esperamos que amem tanto quanto a gente amou preparar. 😊 Veja aqui: {link}"
+                  # 👇 Salvar para agendamento da mensagem de avaliação
+                salvar_entrega(telefone.replace("whatsapp:", ""), nome)
             elif status == "in_transit":
                 mensagem = f"{nome}, seu pedido DogNerd está quase aí! 🐶 Falta pouco pra ele aparecer latindo na sua porta 🤩. Link: {link}"
             else:
